@@ -48,6 +48,10 @@ Description of available options:
   --aws-secret-key=VALUE      Specifies the AWS secret key to use to sign the request.
   --aws-iam-role=VALUE        Specifies the IAM role used to provide AWS credentials.
 
+Docker things
+
+  --containers-count          Reports how much docker containers are running.
+
   --from-cron  Specifies that this script is running from cron.
   --verify     Checks configuration and prepares a remote call.
   --verbose    Displays details of what the script is doing.
@@ -107,6 +111,7 @@ my $version = '1.2.1';
 my $client_name = 'CloudWatch-PutInstanceData';
 
 my $mcount = 0;
+my $report_containers_count;
 my $report_mem_util;
 my $report_mem_used;
 my $report_mem_avail;
@@ -144,6 +149,7 @@ my $argv_size = @ARGV;
   $parse_result = GetOptions(
     'help|?' => \$show_help,
     'version' => \$show_version,
+    'containers-count' => \$report_containers_count,
     'mem-util' => \$report_mem_util,
     'mem-used' => \$report_mem_used,
     'mem-avail' => \$report_mem_avail,
@@ -337,9 +343,9 @@ if (!$report_mem_util && !$report_mem_used && !$report_mem_avail
 my $timestamp = CloudWatchClient::get_offset_time(NOW);
 my $instance_id = CloudWatchClient::get_instance_id();
 
-if (!defined($instance_id) || length($instance_id) == 0) {
-  exit_with_error("Cannot obtain instance id from EC2 meta-data.");
-}
+# if (!defined($instance_id) || length($instance_id) == 0) {
+#   exit_with_error("Cannot obtain instance id from EC2 meta-data.");
+# }
 
 if ($aggregated && lc($aggregated) ne 'only') {
   exit_with_error("Unrecognized value '$aggregated' for --aggregated option.");
@@ -540,6 +546,21 @@ if ($report_mem_util || $report_mem_used || $report_mem_avail || $report_swap_ut
   if ($report_swap_used) {
     add_metric('SwapUsed', $mem_units, $swap_used / $mem_unit_div);
   }
+}
+
+# Collect docker containers running
+
+if ($report_containers_count)
+{
+  my %dockerinfo;
+  foreach my $line (split('\n', `/usr/bin/docker info`)) {
+    if($line =~ /^(.*?):\s+(\d+)/) {
+      $dockerinfo{$1} = $2;
+    }
+  }
+
+  my $containers_count = $dockerinfo{'Running'};
+  add_metric('ContainersCount', 'Containers', $containers_count);
 }
 
 # collect disk space metrics
