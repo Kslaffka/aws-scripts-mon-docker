@@ -7,7 +7,9 @@ MAINTAINER Viacheslav Kompaniiets <viacheslav.kompaniiets@sboxinc.com>
 RUN apk update && apk upgrade &&\
     apk add --no-cache bash curl procps perl perl-libwww perl-datetime-format-natural
 
-COPY awscreds.template awscreds.template
+COPY aws-scripts-mon/ /aws-scripts-mon/
+
+WORKDIR /aws-scripts-mon
 
 # Setup cron
 
