@@ -559,10 +559,6 @@ if ($report_containers_count)
     }
   }
 
-  # use Data::Dumper qw(Dumper);
-
-  # print Dumper \%dockerinfo;
-
   my $containers_count = $dockerinfo{' Running'};
   add_metric('ContainersCount', 'Containers', $containers_count);
 }
