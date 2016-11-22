@@ -51,6 +51,7 @@ Description of available options:
 Docker things
 
   --containers-count          Reports how much docker containers are running.
+  --containers-mem            Reports memory used by each container.
 
   --from-cron  Specifies that this script is running from cron.
   --verify     Checks configuration and prepares a remote call.
@@ -112,6 +113,7 @@ my $client_name = 'CloudWatch-PutInstanceData';
 
 my $mcount = 0;
 my $report_containers_count;
+my $report_containers_mem;
 my $report_mem_util;
 my $report_mem_used;
 my $report_mem_avail;
@@ -150,6 +152,7 @@ my $argv_size = @ARGV;
     'help|?' => \$show_help,
     'version' => \$show_version,
     'containers-count' => \$report_containers_count,
+    'containers-mem' => \$report_containers_mem,
     'mem-util' => \$report_mem_util,
     'mem-used' => \$report_mem_used,
     'mem-avail' => \$report_mem_avail,
@@ -560,7 +563,27 @@ if ($report_containers_count)
   }
 
   my $containers_count = $dockerinfo{' Running'};
-  add_metric('ContainersCount', 'Containers', $containers_count);
+  add_metric('DockerContainersCount', 'Containers', $containers_count);
+}
+
+# collect containers memory usage metrics
+
+if ($report_containers_mem)
+{
+  my @dockerstats = `/usr/bin/docker stats --no-stream`;
+  shift @dockerstats;
+
+  foreach my $line (@dockerstats)
+  {
+    my @fields = split('\s+', $line);
+    my $container = $fields[0];
+    my $units = $fields[3];
+    my $memory_used = $fields[2];
+    $units =~ s/KiB/Kilobytes/g;
+    $units =~ s/MiB/Megabytes/g;
+    $units =~ s/GiB/Gigabytes/g;
+    add_metric('DockerMemotyUsed', $units, $memory_used);
+  }
 }
 
 # collect disk space metrics
