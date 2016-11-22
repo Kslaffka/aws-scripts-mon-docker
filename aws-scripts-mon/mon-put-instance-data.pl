@@ -76,6 +76,7 @@ USAGE
 
 use strict;
 use warnings;
+use Switch;
 use Getopt::Long;
 use File::Basename;
 use Sys::Hostname;
@@ -577,12 +578,18 @@ if ($report_containers_mem)
   {
     my @fields = split('\s+', $line);
     my $container = $fields[0];
-    my $units = $fields[3];
+    my $raw_units = $fields[3];
     my $memory_used = $fields[2];
-    $units =~ s/KiB/Kilobytes/g;
-    $units =~ s/MiB/Megabytes/g;
-    $units =~ s/GiB/Gigabytes/g;
-    add_metric('DockerMemotyUsed', $units, $memory_used);
+    my $units;
+    switch($raw_units){
+      case "KiB" {$units="Kilobytes"}
+      case "KB"  {$units="Kilobytes"}
+      case "MiB" {$units="Megabytes"}
+      case "MB"  {$units="Megabytes"}
+      case "GiB" {$units="Gigabytes"}
+      case "GB"  {$units="Gigabytes"}
+    }
+    add_metric('DockerMemotyUsed-'.$container, $units, $memory_used);
   }
 }
 

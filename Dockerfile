@@ -4,7 +4,7 @@ MAINTAINER Viacheslav Kompaniiets <viacheslav.kompaniiets@sboxinc.com>
 
 # Install monitoring scripts
 RUN apk update && apk upgrade &&\
-    apk add --no-cache bash wget curl procps py-pip perl perl-libwww perl-datetime-format-natural docker
+    apk add --no-cache bash wget curl procps py-pip perl perl-libwww perl-datetime-format-natural perl-switch docker
 
 # Copy scripts inside container
 COPY aws-scripts-mon/ /aws-scripts-mon/
